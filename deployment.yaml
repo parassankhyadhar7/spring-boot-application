@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  app-deployment
+  labels:
+    name:  app-deploy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: app-pod
+  strategy:
+    rollingUpdate:
+      maxSurge: 4
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: app-pod
+    spec:
+      containers:
+      - image: k8sacr.azurecr.io/main-wabapp:latest
+        name:  app-con
+        # livenessProbe:
+        #   httpGet:
+        #     path: /demoapp/actuator/health
+        #     port: 8080
+        #   initialDelaySeconds: 90
+        #   timeoutSeconds: 10
+        # readinessProbe:
+        #   httpGet:
+        #     path: /demoapp/actuator/health
+        #     port: 8080
+        #   initialDelaySeconds: 30
+        #   timeoutSeconds: 10
+      restartPolicy: Always
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: deploy-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+  selector:
+    name: app-pod
+
+
+# ---
+
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: deploy-service
+# spec:
+#   type: LoadBalancer
+#   ports:
+#     - port: 30001
+#       targetPort: 8080
+#       protocol: TCP
+#   selector:
+#       name: app-pod

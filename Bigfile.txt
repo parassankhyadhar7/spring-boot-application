@@ -1,0 +1,200 @@
+terraform{
+  required_providers{
+    azurerm = {
+      source = hashicorp/azurerm
+      version = ">=x.y.z"
+    }
+    backed "azurerm" {
+       resource_group_name = 
+       storage_account_name =
+       container_name = 
+       key = 
+       access_key =
+    }
+  }
+
+}
+
+
+
+Dockerfile
+
+
+FROM mvn:openjdk:17 AS builder
+WORKDIR /app
+USER root
+COPY . .
+RUN mvn clean package
+
+FROM tomcat:latest
+WORKDIR /usr/local/webapps
+USER root
+COPY --from=builder /app/target/demo.war .
+EXPOSE 8080
+RUN ["catalina.sh" "run"] 
+
+
+FROM ubuntu
+ENTRYPOINT ["sleep"]
+CMD ["sleep", "10" ]
+
+docker build -t demoimage .
+
+docker run -d  -p 8080:80 --name democon demoimage 10
+
+sleep 10 
+
+
+config_map.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-config-map
+data:
+  COLOR: "green"
+  APP_NAME: "demoapp"
+
+
+
+Pod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-pod
+  labels:
+    app: login
+spec:
+  initContainers:
+    -  name: 
+  containers:
+    -  name: demo-con
+       image: login:latest
+       command: ["sleep"]
+       args: ["sleep 5"]
+       env:                                    envfrom:
+         - name: COLOR                           configMapRef:
+           valueFrom:                              name: demo-config-map
+             configMapKeyRef:
+               name: demo-config-map
+               key: COLOR
+       volumeMounts:
+         -  mountPath: /opt
+            name: data-volume
+  volumes:
+    - name: data-volume
+      hostPath:
+        path: /data
+        type: Directory
+
+deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-deployment
+spec:
+  replicas: 4
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 5
+      maxUnavailable: 1
+  selector:
+    matchlabels:
+      app: login
+  template:
+    metadata:
+      name: loginapp
+      labels:
+        app: login
+    spec:
+      containers:
+        - name: loginapp
+          image: login:latest
+          env:
+            - name: COLOR
+              valuefrom:
+                configMapKeyRef:
+                  name: demo-config
+                  key: COLOR
+          volumeMountes:
+            mountPath: /opt
+            name: data-volume
+      volumes:
+        -  name: data-volume
+           persistantVolumeClaim:
+             claimNme: pvc-data
+
+cluserservice.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cluster-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+
+
+loadbalanerservice.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cluster-service
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 30001
+      targetPort: 8080
+
+
+ingress.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-ingress
+  annotations: 
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  rules:
+    -  http:
+         paths:
+           - path: /main(/|$)(.*)
+             type: Prefix
+             backend:
+               service:
+                 name: demo-service-01
+                 port:
+                   number: 8080   
+            - path: /shop(/|$)(.*)
+              type: Prefix
+              backend:
+                service:
+                  name: demo-service-02
+                  port:
+                    number: 8080   
+
+persistantvolume.yaml
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,46 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+variables:
+  acrName: "k8sacr.azurecr.io"
+  imageName: "main-app-pl"
+  tag: "${Build.BuildId}"
+
+stages:
+  - stage: Build_and_Push
+    displayName: Build and Push to ACR
+    jobs:
+      - job: Build
+        displayName: Build Image
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+        - task: Docker@2
+          inputs:
+            containerRegistry: 'acrsc'
+            repository: 'main-app-pl'
+            command: 'buildAndPush'
+            Dockerfile: '**/Dockerfile'
+        - task: KubernetesManifest@1
+          inputs:
+            action: 'createSecret'
+            connectionType: 'kubernetesServiceConnection'
+            kubernetesServiceConnection: 'akssc'
+            namespace: 'default'
+            secretType: 'dockerRegistry'
+            secretName: 'acr-secret'
+            dockerRegistryEndpoint: 'acrsc'
+        - task: KubernetesManifest@1
+          inputs:
+            action: 'deploy'
+            connectionType: 'kubernetesServiceConnection'
+            kubernetesServiceConnection: 'akssc'
+            namespace: 'default'
+            manifests: '$(System.DefaultWorkingDirectory)/deployment.yaml'
+            containers: 'k8sacr.azurecr.io/main-app-pl:$(Build.BuildId)'
+            imagePullSecrets: 'acr-secret'
