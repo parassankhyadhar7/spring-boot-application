@@ -36,7 +36,7 @@ RUN ["catalina.sh" "run"]
 
 FROM ubuntu
 ENTRYPOINT ["sleep"]
-CMD ["sleep", "10" ]
+CMD ["10" ]
 
 docker build -t demoimage .
 
@@ -137,6 +137,9 @@ spec:
   type: ClusterIP
   ports:
     - port: 8080
+  selector:
+    app: login
+    
 
 
 loadbalanerservice.yaml
@@ -150,6 +153,8 @@ spec:
   ports:
     - port: 30001
       targetPort: 8080
+  selector:
+   app: login
 
 
 ingress.yaml
@@ -179,9 +184,56 @@ spec:
                   port:
                     number: 8080   
 
-persistantvolume.yaml
+ingress_policy.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-policy
+spec:
+  policyTypes:
+    - ingress
+  podSelector:
+    matchLables:
+      app: db
+  ingress:
+    - from:
+        - podSelector:
+            matchLables:
+              app: login
+      ports:
+        - protocol: TCP
+          port: 3306
 
 
+
+persistentvolume.yaml
+
+apiVersion: v1
+kind: PersistentVaolume
+metadata:
+  name: pv-01
+spec:
+  accessModes:
+    -  ReadWriteOnce
+  capacity:
+    storage: 10 Gi
+  hostPath:
+    path: /temp/data or awsElasticClockStrore:
+                          volumeID: <voulme-id>
+
+persistantvalueclaim.yaml
+
+apiVersion: v1
+kind: PersistentValumeClaim
+metadata:
+  name: my claim
+spec:
+  accessModes:
+    -  ReadWriteOnce
+  resource:
+    request:
+      storage: 500Mi
 
 
 
