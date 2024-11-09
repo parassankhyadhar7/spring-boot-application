@@ -270,8 +270,8 @@ spec:
     cloudName: AzurePublicCLoud
     tenantID: ""
     keyVaultName: kv-01
-    userPodIndentity: "flase"
-    userManagedIdentity: "true"
+    usePodIndentity: "flase"
+    useVMManagedIdentity: "true"
     userAssignedIdenityID: ""
     objects: |
       arrays:
