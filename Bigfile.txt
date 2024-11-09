@@ -294,6 +294,7 @@ spec:
        volumeMounts:
          -  mountpath:
             name: secret-vol
+            readOnly: true
   volumes:
     - name: secret-vol
       csi:
