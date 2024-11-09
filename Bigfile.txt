@@ -237,8 +237,25 @@ spec:
 
 
 
+hpa.yaml
 
-
+apiversion: autoscalling/v2beta1
+kind: HorizontalPodScalar
+metadata:
+  name: demo-hpa
+  namespace: demo
+spec:
+  scaleTatgetRef:
+    apiversion: apps/v1
+    kind: Deployment
+    name: demo-deploy
+  maxReplicas: 5
+  minReplica: 1
+  matrics:
+    -  type: Resource
+       resource:
+         name: cpu                                 name: memory
+         targetAverageUtilization: 80              targetAverageUtilization: 50
 
 
 
