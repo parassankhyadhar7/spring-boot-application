@@ -258,8 +258,49 @@ spec:
          targetAverageUtilization: 80              targetAverageUtilization: 50
 
 
+AKS with KV -->
 
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: azure-kv-secret
+  namespace: default
+spec:
+  parameters:
+    cloudName: AzurePublicCLoud
+    tenantID: ""
+    keyVaultName: kv-01
+    userPodIndentity: "flase"
+    userManagedIdentity: "true"
+    userAssignedIdenityID: ""
+    objects: |
+      arrays:
+        - |
+          objetName: pod-secret
+          objectType: secret
+  provider: Azure
 
+pod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: 
+  namespace:
+spec:
+  containers:
+    -  name: 
+       image:
+       volumeMounts:
+         -  mountpath:
+            name: secret-vol
+  volumes:
+    - name: secret-vol
+      csi:
+        driver: secrets-strore.csi.x-k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: azure-kv-secret
 
 
 
