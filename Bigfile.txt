@@ -240,7 +240,7 @@ spec:
 hpa.yaml
 
 apiversion: autoscalling/v2beta1
-kind: HorizontalPodScalar
+kind: HorizontalPodScaler
 metadata:
   name: demo-hpa
   namespace: demo
