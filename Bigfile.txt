@@ -219,8 +219,21 @@ spec:
   capacity:
     storage: 10 Gi
   hostPath:
-    path: /temp/data or awsElasticClockStrore:
-                          volumeID: <voulme-id>
+    path: /temp/data 
+
+StorageClass.yaml
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: sc-01
+provisioner: kubernetes.io/azure-disk
+reclaimPolicy: Retain # Retain or Delete (Once the PVC deleted disk will also be deleted)
+volumeBindingMode: waitForFirstConsumer
+allowVolumeExpenstion: true
+parameters:
+  storageAccountType: Standard_LRS
+  kind: Managed
 
 persistantvalueclaim.yaml
 
@@ -234,6 +247,7 @@ spec:
   resource:
     request:
       storage: 500Mi
+storageClass: sc-01
 
 
 
