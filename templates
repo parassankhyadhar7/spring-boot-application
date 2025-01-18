@@ -1,0 +1,103 @@
+# File: terraform-pipeline-template.yml
+parameters:
+  environment: ''  # Environment name (e.g., dev, staging, prod)
+  terraformDirectory: ''  # Path to the Terraform code
+  backendStorageAccount: ''  # Azure Storage account for the backend
+  backendContainer: ''  # Container for state file
+
+stages:
+  # Stage 1: Terraform Plan
+  - stage: Plan
+    displayName: "Terraform Plan for ${{ parameters.environment }}"
+    jobs:
+      - job: TerraformPlan
+        displayName: "Terraform Plan Job"
+        steps:
+          - checkout: self
+
+          # Terraform Init
+          - task: Bash@3
+            displayName: "Terraform Init"
+            inputs:
+              targetType: 'inline'
+              script: |
+                cd ${{ parameters.terraformDirectory }}
+                terraform init \
+                  -backend-config="storage_account_name=${{ parameters.backendStorageAccount }}" \
+                  -backend-config="container_name=${{ parameters.backendContainer }}" \
+                  -backend-config="key=${{ parameters.environment }}/terraform.tfstate"
+
+          # Terraform Plan
+          - task: Bash@3
+            displayName: "Terraform Plan"
+            inputs:
+              targetType: 'inline'
+              script: |
+                cd ${{ parameters.terraformDirectory }}
+                terraform plan -out=tfplan
+
+          # Upload Terraform Plan
+          - task: PublishPipelineArtifact@1
+            displayName: "Publish Terraform Plan"
+            inputs:
+              targetPath: ${{ parameters.terraformDirectory }}/tfplan
+              artifact: tfplan
+
+  # Stage 2: Terraform Apply with Approval Gate
+  - stage: Apply
+    displayName: "Terraform Apply for ${{ parameters.environment }}"
+    dependsOn: Plan
+    condition: succeeded()
+    jobs:
+      - deployment: TerraformApply
+        displayName: "Terraform Apply Job"
+        environment: "${{ parameters.environment }}"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Download Terraform Plan Artifact
+                - task: DownloadPipelineArtifact@2
+                  displayName: "Download Terraform Plan"
+                  inputs:
+                    artifact: tfplan
+
+                # Terraform Apply
+                - task: Bash@3
+                  displayName: "Terraform Apply"
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      cd ${{ parameters.terraformDirectory }}
+                      terraform apply -auto-approve tfplan
+
+
+
+
+
+
+trigger:
+  branches:
+    include:
+      - main
+
+stages:
+  - template: terraform-pipeline-template.yml
+    parameters:
+      environment: dev
+      terraformDirectory: infra/dev
+      backendStorageAccount: devstorageaccount
+      backendContainer: terraform-state
+
+
+
+
+3. Add Approval Gate in the Azure DevOps UI
+Azure DevOps does not allow adding an approval step directly in a YAML file. However, you can configure an approval gate for the Apply stage in the Azure DevOps portal:
+
+Go to your pipeline in the Azure DevOps UI.
+Click on the Apply stage.
+Select Pre-deployment conditions.
+Under Approvals and checks, click + Add and select Approvals.
+Configure the approvers, timeout, and optional instructions.
+Save the configuration.
