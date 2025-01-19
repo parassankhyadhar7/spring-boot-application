@@ -45,6 +45,21 @@ docker run -d  -p 8080:80 --name democon demoimage 10
 sleep 10 
 
 
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: my-quota
+  namespace: my-namespace
+spec:
+  hard:
+    pods: 10                       # Maximum number of pods
+    requests.cpu: "4"              # Total CPU requests cannot exceed 4 cores
+    requests.memory: "8Gi"         # Total memory requests cannot exceed 8Gi
+    limits.cpu: "8"                # Total CPU limits cannot exceed 8 cores
+    limits.memory: "16Gi"          # Total memory limits cannot exceed 16Gi
+
+
+
 config_map.yaml
 
 apiVersion: v1
