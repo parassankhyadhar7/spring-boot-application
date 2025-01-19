@@ -41,13 +41,13 @@ RUN ["catalina.sh" "run"]
 
 FROM ubuntu
 ENTRYPOINT ["sleep"]
-CMD ["10" ]
+CMD ["sleep" "5" ]
 
 docker build -t demoimage .
 
-docker run -d  -p 8080:80 --name democon demoimage 10
+entrypoint --> docker run -d  -p 8080:80 --name democon demoimage 10
 
-sleep 10 
+sleep --> docker run -d  -p 8080:80 --name democon demoimage sleep 10 
 
 
 apiVersion: v1
@@ -91,7 +91,7 @@ spec:
   containers:
     -  name: demo-con
        image: login:latest
-       command: ["sleep"]
+       command: ["10"]
        args: ["sleep 5"]
        env:                                    envfrom:
          - name: COLOR                           configMapRef:
