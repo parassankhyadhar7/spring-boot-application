@@ -36,7 +36,7 @@ WORKDIR /usr/local/webapps
 USER root
 COPY --from=builder /app/target/demo.war .
 EXPOSE 8080
-RUN ["catalina.sh" "run"] 
+CMD ["catalina.sh" "run"] 
 
 
 FROM ubuntu
